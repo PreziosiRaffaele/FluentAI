@@ -25,11 +25,11 @@ async function correctText (text) {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a helpful assistant. Your role is to correct the user\'s text and improve clarity.',
+                    content: 'You are a helpful assistant. Your role is to correct the user\'s text for grammar, punctuation, clarity, and readability.',
                 },
                 {
                     role: 'user',
-                    content: `Please correct the following text and return only the corrected version: ${text}`,
+                    content: `Please correct the following text. Return only the revised version without additional comments: ${text}`,
                 },
             ],
         });
@@ -40,7 +40,6 @@ async function correctText (text) {
         return text;
     }
 }
-
 
 /**
  * Corrects the text in the clipboard and pastes the corrected text.
