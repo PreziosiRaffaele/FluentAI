@@ -53,7 +53,11 @@ async function correctAndPaste () {
         if (copiedText) {
             const correctedText = await correctText(copiedText);
             clipboard.writeSync(correctedText);
-            robot.typeString(correctedText);
+            if (process.platform === 'darwin') { // macOS
+                robot.keyTap('v', 'command');
+            } else {
+                robot.keyTap('v', 'control'); // Windows and Linux
+            }
         } else {
             console.log("No text found in clipboard.");
         }
