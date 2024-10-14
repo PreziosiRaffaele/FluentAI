@@ -15,8 +15,8 @@ const client = new OpenAI({
  * Corrects the given text using the GPT-3.5-turbo model.
  *
  * @async
- * @param {*} text The text to correct.
- * @returns {unknown} The corrected text. If an error occurs, the original text is returned.
+ * @param {string} text The text to correct.
+ * @returns {string} The corrected text. If an error occurs, the original text is returned.
  */
 async function correctText (text) {
     try {
@@ -43,9 +43,6 @@ async function correctText (text) {
 
 /**
  * Corrects the text in the clipboard and pastes the corrected text.
- *
- * @async
- * @returns {*}
  */
 async function correctAndPaste () {
     try {
