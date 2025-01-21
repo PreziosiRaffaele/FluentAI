@@ -12,7 +12,7 @@ const client = new OpenAI({
 
 
 /**
- * Corrects the given text using the GPT-3.5-turbo model.
+ * Corrects the given text using the OpenAI API.
  *
  * @async
  * @param {string} text The text to correct.
@@ -21,7 +21,7 @@ const client = new OpenAI({
 async function correctText (text) {
     try {
         const response = await client.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o-mini',
             messages: [
                 {
                     role: 'system',
