@@ -10,6 +10,12 @@ const client = new OpenAI({
     apiKey: process.env.API_KEY, // This is the default and can be omitted
 });
 
+const systemPrompt = `You are a professional editor. Follow these rules:
+1. Correct grammar and punctuation
+2. Improve clarity and readability
+3. Maintain the original tone and intent
+4. Keep the same format (lists stay lists, etc.)
+5. Don't add explanations or comments`;
 
 /**
  * Corrects the given text using the OpenAI API.
@@ -25,12 +31,12 @@ async function correctText (text) {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a helpful assistant. Your role is to correct the user\'s text for grammar, punctuation, clarity, and readability.',
+                    content: systemPrompt,
                 },
                 {
                     role: 'user',
                     content: `Please correct the following text. Return only the revised version without additional comments: ${text}`,
-                },
+                }
             ],
         });
 
