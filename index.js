@@ -26,6 +26,7 @@ async function correctText (text) {
     try {
         const response = await client.chat.completions.create({
             model: 'gpt-4o-mini',
+            temperature: 0.2,
             messages: [
                 {
                     role: 'system',
@@ -46,24 +47,21 @@ async function correctText (text) {
 }
 
 app.whenReady().then(() => {
-    const ret = globalShortcut.register('Cmd+Option+Space', () => {
-        const text = clipboard.readText()
-        clipboard.writeText('Processing...');
-        correctText(text)
-            .then(correctedText => {
-                clipboard.writeText(correctedText)
-            })
-            .catch(error => {
-                console.error('Errore:', error);
-                clipboard.writeText(error.message);
-            });
-    })
+    const ret = globalShortcut.register('Cmd+Option+Space', async () => {
+        try {
+            const text = clipboard.readText();
+            clipboard.writeText('Processing...');
+            const correctedText = await correctText(text);
+            clipboard.writeText(correctedText);
+        } catch (error) {
+            console.error('Errore:', error);
+            clipboard.writeText(error.message);
+        }
+    });
 
     if (!ret) {
-        console.log('registration failed')
+        console.log('registration failed');
     }
-
-    console.log(globalShortcut.isRegistered('CommandOrControl+X'))
 })
 
 app.on('will-quit', () => {
