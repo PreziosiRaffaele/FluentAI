@@ -1,10 +1,14 @@
 const { app, globalShortcut, clipboard } = require('electron')
-const dotenv = require('dotenv')
 const OpenAI = require('openai')
+const path = require("path");
+const fs = require("fs");
 
-dotenv.config();
+const userDataPath = app.getPath('userData');
+const configPath = path.join(userDataPath, 'config.json');
+const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+
 const client = new OpenAI({
-    apiKey: process.env.API_KEY, // This is the default and can be omitted
+    apiKey: config.OPENAI_API_KEY,
 });
 
 const systemPrompt = `You are a professional editor. Follow these rules:
