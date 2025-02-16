@@ -1,11 +1,8 @@
-import clipboard from 'clipboardy';
-import OpenAI from 'openai';
-import robot from 'robotjs';
-import { GlobalKeyboardListener } from "node-global-key-listener";
-import dotenv from 'dotenv';
+const { app, globalShortcut, clipboard } = require('electron')
+const dotenv = require('dotenv')
+const OpenAI = require('openai')
 
 dotenv.config();
-const v = new GlobalKeyboardListener();
 const client = new OpenAI({
     apiKey: process.env.API_KEY, // This is the default and can be omitted
 });
@@ -16,6 +13,7 @@ const systemPrompt = `You are a professional editor. Follow these rules:
 3. Maintain the original tone and intent
 4. Keep the same format (lists stay lists, etc.)
 5. Don't add explanations or comments`;
+
 
 /**
  * Corrects the given text using the OpenAI API.
@@ -47,35 +45,27 @@ async function correctText (text) {
     }
 }
 
-/**
- * Corrects the text in the clipboard and pastes the corrected text.
- */
-async function correctAndPaste () {
-    try {
-        const copiedText = clipboard.readSync();
-        if (copiedText) {
-            const correctedText = await correctText(copiedText);
-            clipboard.writeSync(correctedText);
-            if (process.platform === 'darwin') { // macOS
-                robot.keyTap('v', 'command');
-            } else {
-                robot.keyTap('v', 'control'); // Windows and Linux
-            }
-        } else {
-            console.log("No text found in clipboard.");
-        }
-    } catch (error) {
-        console.error('Error during text correction:', error.message);
-    }
-}
+app.whenReady().then(() => {
+    const ret = globalShortcut.register('Cmd+Option+Space', () => {
+        const text = clipboard.readText()
+        clipboard.writeText('Processing...');
+        correctText(text)
+            .then(correctedText => {
+                clipboard.writeText(correctedText)
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                clipboard.writeText(error.message);
+            });
+    })
 
-v.addListener(function (e, down) {
-    if (
-        e.state == "DOWN" &&
-        e.name == "SPACE" &&
-        (down["LEFT META"] && down["LEFT ALT"])
-    ) {
-        correctAndPaste();
-        return true;
+    if (!ret) {
+        console.log('registration failed')
     }
-});
+
+    console.log(globalShortcut.isRegistered('CommandOrControl+X'))
+})
+
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll()
+})
