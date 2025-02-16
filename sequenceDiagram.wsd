@@ -1,0 +1,13 @@
+@startuml
+actor User
+participant "Electron App" as App
+participant "Clipboard" as Clipboard
+participant "OpenAI" as Client
+
+User -> App : Press Cmd+Option+Space
+App -> Clipboard : read
+Clipboard --> App : Original Text
+App -> Client : Send the text to the LLM
+Client --> App : Corrected Text
+App -> Clipboard : write
+@enduml
