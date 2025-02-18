@@ -1,6 +1,30 @@
 const { ipcRenderer } = require('electron');
 
-// Add model options mapping
+// Constants
+const MODAL_OPTIONS = {
+    backdrop: 'static',
+    keyboard: false
+};
+
+const VALID_MODIFIERS = ['Command', 'Cmd', 'Control', 'Ctrl', 'CommandOrControl', 'CmdOrCtrl', 'Alt', 'Option', 'AltGr', 'Shift', 'Super'];
+const VALID_KEY_PATTERN = /^([A-Z0-9]|F[1-24]|Plus|Space|Tab|Backspace|Delete|Insert|Return|Enter|Up|Down|Left|Right|Home|End|PageUp|PageDown|Escape|Esc|VolumeUp|VolumeDown|VolumeMute|MediaNextTrack|MediaPreviousTrack|MediaStop|MediaPlayPause|PrintScreen)$/i;
+
+function isValidShortcut (shortcut) {
+    if (!shortcut) return false;
+
+    const parts = shortcut.split('+').map(part => part.trim());
+    if (parts.length < 2) return false; // Must have at least one modifier
+
+    // Check all parts except the last one are valid modifiers
+    for (let i = 0; i < parts.length - 1; i++) {
+        if (!VALID_MODIFIERS.includes(parts[i])) return false;
+    }
+
+    // Check the last part is a valid key
+    return VALID_KEY_PATTERN.test(parts[parts.length - 1]);
+}
+
+// Data models
 const providerModels = [
     {
         name: 'Open AI',
@@ -12,94 +36,33 @@ const providerModels = [
     }
 ];
 
+// State management
 let config = {
     providers: [],
     macros: []
 };
-
 let editingIndex = -1;
 
-// Load initial data
-document.addEventListener('DOMContentLoaded', async () => {
-    config = await ipcRenderer.invoke('get-config');
-    renderTables();
-    document.getElementById('macroProvider').addEventListener('change', (e) => {
-        updateModelOptions(e.target.value);
-    });
-
-    // Configure modals to not close on backdrop
-    const providerModal = new bootstrap.Modal(document.getElementById('providerModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-
-    const macroModal = new bootstrap.Modal(document.getElementById('macroModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
-
-    // Reset forms when modals are closed
-    document.getElementById('providerModal').addEventListener('hidden.bs.modal', () => {
-        document.getElementById('providerForm').reset();
+// Modal management
+/**
+ * Initialize modal behavior
+ * @param {string} modalId - The ID of the modal element
+ * @param {string} formId - The ID of the form element
+ */
+function initializeModal (modalId, formId) {
+    const modal = new bootstrap.Modal(document.getElementById(modalId), MODAL_OPTIONS);
+    document.getElementById(modalId).addEventListener('hidden.bs.modal', () => {
+        document.getElementById(formId).reset();
         editingIndex = -1;
     });
-
-    document.getElementById('macroModal').addEventListener('hidden.bs.modal', () => {
-        document.getElementById('macroForm').reset();
-        editingIndex = -1;
-    });
-});
-
-function renderTables () {
-    // Render providers table
-    const providersTable = document.getElementById('providersTable');
-    providersTable.innerHTML = config.providers.map((provider, index) => `
-        <tr>
-            <td>${provider.name}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editProvider(${index})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProvider(${index})">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-
-    const providerNames = document.getElementById('providerName');
-    providerNames.innerHTML = providerModels.map(provider =>
-        `<option value="${provider.name}">${provider.name}</option>`
-    ).join('');
-
-    // Render macros table
-    const macrosTable = document.getElementById('macrosTable');
-    macrosTable.innerHTML = config.macros.map((macro, index) => `
-        <tr>
-            <td>${macro.name}</td>
-            <td>${macro.shortcut}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editMacro(${index})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteMacro(${index})">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-
-    // Update provider select in macro modal
-    const providerSelect = document.getElementById('macroProvider');
-    providerSelect.innerHTML = providerModels.map(provider =>
-        `<option value="${provider.name}">${provider.name}</option>`
-    ).join('');
-
-    // Initialize model options for the first provider
-    updateModelOptions(providerSelect.value);
+    return modal;
 }
 
-// Add this new function
-function updateModelOptions (providerName) {
-    const modelSelect = document.getElementById('macroModel');
-    const models = providerModels.find(provider => provider.name === providerName)?.models ?? [];
-    modelSelect.innerHTML = models.map(model =>
-        `<option value="${model}">${model}</option>`
-    ).join('');
-}
-
+// Provider management
+/**
+ * Save provider data to config
+ * @returns {Promise<void>}
+ */
 async function saveProvider () {
     const form = document.getElementById('providerForm');
     if (!form.checkValidity()) {
@@ -107,14 +70,15 @@ async function saveProvider () {
         return;
     }
 
-    const name = document.getElementById('providerName').value;
-    const apiKey = document.getElementById('apiKey').value;
+    const provider = {
+        name: document.getElementById('providerName').value,
+        apiKey: document.getElementById('apiKey').value
+    };
 
     if (editingIndex >= 0) {
-        config.providers[editingIndex] = { name, apiKey };
-        editingIndex = -1;
+        config.providers[editingIndex] = provider;
     } else {
-        config.providers.push({ name, apiKey });
+        config.providers.push(provider);
     }
 
     await ipcRenderer.invoke('save-config', config);
@@ -122,8 +86,21 @@ async function saveProvider () {
     resetAndCloseProviderModal();
 }
 
+// Macro management
+/**
+ * Save macro data to config
+ * @returns {Promise<void>}
+ */
 async function saveMacro () {
     const form = document.getElementById('macroForm');
+    const shortcutInput = document.getElementById('shortcut');
+    const shortcutValue = shortcutInput.value;
+
+    if (!isValidShortcut(shortcutValue)) {
+        alert('Invalid shortcut format. Must include at least one modifier (Command, Ctrl, Alt, Shift) and a key.');
+        return;
+    }
+
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -141,7 +118,6 @@ async function saveMacro () {
 
     if (editingIndex >= 0) {
         config.macros[editingIndex] = macro;
-        editingIndex = -1;
     } else {
         config.macros.push(macro);
     }
@@ -150,6 +126,95 @@ async function saveMacro () {
     renderTables();
     resetAndCloseMacroModal();
 }
+
+// UI rendering
+/**
+ * Update model options based on selected provider
+ * @param {string} providerName - Name of the selected provider
+ */
+function updateModelOptions (providerName) {
+    const modelSelect = document.getElementById('macroModel');
+    const models = providerModels.find(provider => provider.name === providerName)?.models ?? [];
+    modelSelect.innerHTML = models.map(model =>
+        `<option value="${model}">${model}</option>`
+    ).join('');
+}
+
+/**
+ * Render all tables and update UI elements
+ */
+function renderTables () {
+    // Render providers section
+    renderProvidersTable();
+    updateProviderSelects('providerName');
+
+    // Render macros section
+    renderMacrosTable();
+    updateProviderSelects('macroProvider');
+
+    // Initialize model options
+    const providerSelect = document.getElementById('macroProvider');
+    updateModelOptions(providerSelect.value);
+}
+
+// Add this new function
+function renderProvidersTable () {
+    const providersTable = document.getElementById('providersTable');
+    providersTable.innerHTML = config.providers.map((provider, index) => `
+        <tr>
+            <td>${provider.name}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editProvider(${index})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProvider(${index})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateProviderSelects (field) {
+    const providerNames = document.getElementById(field);
+    providerNames.innerHTML = providerModels.map(provider =>
+        `<option value="${provider.name}">${provider.name}</option>`
+    ).join('');
+}
+
+function renderMacrosTable () {
+    const macrosTable = document.getElementById('macrosTable');
+    macrosTable.innerHTML = config.macros.map((macro, index) => `
+        <tr>
+            <td>${macro.name}</td>
+            <td>${macro.shortcut}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editMacro(${index})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteMacro(${index})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    config = await ipcRenderer.invoke('get-config');
+
+    // Initialize event listeners
+    document.getElementById('macroProvider').addEventListener('change', (e) => {
+        updateModelOptions(e.target.value);
+    });
+
+    const shortcutInput = document.getElementById('shortcut');
+    shortcutInput.addEventListener('input', (e) => {
+        const isValid = isValidShortcut(e.target.value);
+        shortcutInput.setCustomValidity(isValid ? '' : 'Invalid shortcut format');
+        shortcutInput.reportValidity();
+    });
+
+    // Initialize modals
+    initializeModal('providerModal', 'providerForm');
+    initializeModal('macroModal', 'macroForm');
+
+    // Initial render
+    renderTables();
+});
 
 function resetAndCloseProviderModal () {
     const modal = bootstrap.Modal.getInstance(document.getElementById('providerModal'));
