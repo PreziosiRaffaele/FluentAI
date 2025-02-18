@@ -3,7 +3,7 @@ const fs = require('fs');
 
 class ConfigManager {
     constructor(userDataPath) {
-        this.configPath = path.join(userDataPath, 'config2.json');
+        this.configPath = path.join(userDataPath, 'config.json');
         this.initializeConfig();
     }
 

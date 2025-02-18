@@ -1,5 +1,5 @@
 {
-    "name": "fluentai",
+    "name": "keygenie",
     "version": "1.0.0",
     "main": "src/index.js",
     "scripts": {
@@ -20,8 +20,8 @@
         "nodemon": "^3.1.9"
     },
     "build": {
-        "appId": "fluentAI.app",
-        "productName": "Fluent AI",
+        "appId": "keyGenie.app",
+        "productName": "Key Genie",
         "mac": {
             "identity": null,
             "category": "public.app-category.utilities"
