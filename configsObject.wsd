@@ -1,0 +1,39 @@
+
+@startjson
+{
+    "providers": [
+    {
+        "name": "openai",
+        "apiKey": "sk-1234567890"
+    },
+    {
+        "name": "DeepSeek",
+        "apiKey": "sk-1234567890"
+    }
+    ],
+    "macros": [
+    {
+        "name": "Correct Text",
+        "provider": "openai",
+        "modelSettings": {
+            "temperature": 0.2
+        },
+        "model": "gpt-3.5-turbo",
+        "systemPrompt": "You are a professional editor...",
+        "userPrompt": "Please correct the following text...:",
+        "shortcut": "Cmd+Option+Space"
+    },
+    {
+        "name": "Reply to Email",
+        "provider": "DeepSeek",
+        "modelSettings": {
+            "temperature": 1
+        },
+        "model": "deepseek-chat",
+        "systemPrompt": "You are a layer...",
+        "userPrompt": "Please reply to the following email...:",
+        "shortcut": "Cmd+Option+Space"
+    }
+    ]
+}
+@endjson
