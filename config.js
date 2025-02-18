@@ -9,14 +9,6 @@ const providerModels = [
             'gpt-4',
             'gpt-3.5-turbo'
         ]
-    },
-    {
-        name: 'DeepSeek',
-        models: [
-            'deepseek-1',
-            'deepseek-2',
-            'deepseek-3'
-        ]
     }
 ];
 
