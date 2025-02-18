@@ -1,7 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const ConfigManager = require('./config/ConfigManager');
-const AIService = require('./services/AIService');
-const MacroService = require('./services/MacroService');
+const ConfigManager = require('./js/ConfigManager');
+const AIService = require('./js/AIService');
+const MacroService = require('./js/MacroService');
+const path = require('path');
 
 // Initialize services
 const configManager = new ConfigManager(app.getPath('userData'));
@@ -22,7 +23,7 @@ app.whenReady().then(async () => {
         }
     });
 
-    configWindow.loadFile('config.html');
+    configWindow.loadFile(path.join(__dirname, 'html', 'config.html'));
 });
 
 // IPC handlers
