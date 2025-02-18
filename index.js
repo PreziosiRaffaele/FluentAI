@@ -33,7 +33,7 @@ async function processText (text, macro) {
 
     const response = await client.chat.completions.create({
         model: macro.model,
-        temperature: 0.2,
+        temperature: parseFloat(macro.temperature),
         messages: [
             {
                 role: 'system',
@@ -80,6 +80,7 @@ app.whenReady().then(async () => {
     let configWindow = new BrowserWindow({
         width: 800,
         height: 600,
+
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -100,7 +101,7 @@ ipcMain.handle('get-config', () => {
 
 ipcMain.handle('save-config', async (event, newConfig) => {
     fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
-    registerMacros(config.macros);
+    registerMacros(newConfig.macros);
 });
 
 app.on('will-quit', () => {

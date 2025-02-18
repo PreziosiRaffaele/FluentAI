@@ -39,8 +39,6 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Provider</th>
-                        <th>Model</th>
                         <th>Shortcut</th>
                         <th>Actions</th>
                     </tr>
@@ -107,6 +105,10 @@
                             <select class="form-select" id="macroModel" required>
                                 <!-- Models will be populated dynamically -->
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Temperature</label>
+                            <input type="number" class="form-control" id="temperature" required step="0.1" min="0" max="2" value="1">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">System Prompt</label>

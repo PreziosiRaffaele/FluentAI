@@ -81,8 +81,6 @@ function renderTables () {
     macrosTable.innerHTML = config.macros.map((macro, index) => `
         <tr>
             <td>${macro.name}</td>
-            <td>${macro.provider}</td>
-            <td>${macro.model}</td>
             <td>${macro.shortcut}</td>
             <td>
                 <button class="btn btn-sm btn-warning" onclick="editMacro(${index})">Edit</button>
@@ -144,6 +142,7 @@ async function saveMacro () {
         provider: document.getElementById('macroProvider').value,
         model: document.getElementById('macroModel').value,
         systemPrompt: document.getElementById('systemPrompt').value,
+        temperature: document.getElementById('temperature').value,
         userPrompt: document.getElementById('userPrompt').value,
         shortcut: document.getElementById('shortcut').value
     };
@@ -208,6 +207,7 @@ function editMacro (index) {
     document.getElementById('macroProvider').value = macro.provider;
     document.getElementById('macroModel').value = macro.model;
     document.getElementById('systemPrompt').value = macro.systemPrompt;
+    document.getElementById('temperature').value = macro.temperature;
     document.getElementById('userPrompt').value = macro.userPrompt;
     document.getElementById('shortcut').value = macro.shortcut;
 
