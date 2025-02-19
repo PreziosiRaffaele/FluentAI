@@ -33,6 +33,12 @@ const providerModels = [
             'gpt-4',
             'gpt-3.5-turbo'
         ]
+    },
+    {
+        name: 'DeepSeek',
+        models: [
+            'deepseek-chat'
+        ]
     }
 ];
 
@@ -262,6 +268,7 @@ function editMacro (index) {
 
     document.getElementById('macroName').value = macro.name;
     document.getElementById('macroProvider').value = macro.provider;
+    updateModelOptions(macro.provider);
     document.getElementById('macroModel').value = macro.model;
     document.getElementById('systemPrompt').value = macro.systemPrompt;
     document.getElementById('temperature').value = macro.temperature;

@@ -11,6 +11,11 @@ class AIService {
                 this.clients.set(provider.name, new OpenAI({
                     apiKey: provider.apiKey,
                 }));
+            } else if (provider.name === 'DeepSeek') {
+                this.clients.set(provider.name, new OpenAI({
+                    apiKey: provider.apiKey,
+                    baseURL: 'https://api.deepseek.com/v1'
+                }));
             }
         });
     }
