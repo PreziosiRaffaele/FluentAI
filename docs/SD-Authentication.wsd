@@ -1,0 +1,44 @@
+@startuml
+actor User
+participant "Electron Renderer" as Renderer
+participant "Electron Main" as Main
+participant "Firebase Auth" as FirebaseAuth
+participant "Firestore" as Firestore
+participant "Backend Server" as Backend
+participant "Stripe" as Stripe
+
+User -> Renderer: Opens app
+Renderer -> Main: Check if authenticated
+Main --> Renderer: No auth token, show login
+Renderer -> User: Displays login form
+
+User -> Renderer: Submits email/password
+Renderer -> FirebaseAuth: signInWithEmailAndPassword(email, password)
+FirebaseAuth --> Renderer: Returns idToken
+Renderer -> Main: Sends idToken for validation
+Main -> Firestore: Query subscription status with idToken
+Firestore --> Main: Returns no subscription
+Main --> Renderer: Subscription not found, show purchase option
+Renderer -> User: Displays "Buy Subscription" button
+
+User -> Renderer: Clicks "Buy Subscription"
+Renderer -> Main: Request subscription purchase
+Main -> Backend: POST /create-checkout-session (idToken)
+Backend -> Stripe: Create Checkout Session (priceId, customerEmail)
+Stripe --> Backend: Returns session URL
+Backend --> Main: Returns session URL
+Main -> Renderer: Open session URL in browser
+Renderer -> User: Opens browser with Stripe Checkout
+
+User -> Stripe: Completes payment
+Stripe -> Backend: Webhook: payment succeeded (subscriptionId)
+Backend -> Firestore: Update subscription (userId, subscriptionId, active=true)
+Backend --> Stripe: Acknowledge webhook
+User -> Renderer: Returns to app (manual)
+Renderer -> Main: Check subscription status
+Main -> Firestore: Query subscription status with idToken
+Firestore --> Main: Returns active subscription
+Main --> Renderer: Unlock premium features
+Renderer -> User: Shows full app with AI text correction
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+actor User
+participant "Electron Renderer" as Renderer
+participant "Electron Main" as Main
+participant "Firebase Auth" as FirebaseAuth
+participant "Firestore" as Firestore
+participant "AI Correction" as AI
+
+' Initial App Start and Authentication
+User -> Renderer: Opens app
+Renderer -> Main: Check cached idToken
+alt No idToken cached
+    Main --> Renderer: Show login form
+    Renderer -> User: Displays login form
+    User -> Renderer: Submits email/password
+    Renderer -> FirebaseAuth: signInWithEmailAndPassword(email, password)
+    FirebaseAuth --> Renderer: Returns idToken
+    Renderer -> Main: Store idToken and userId
+    Main -> Firestore: Query subscription status (userId)
+    Firestore --> Main: Returns subscription data (tokenLimit, tokensUsed)
+    Main --> Renderer: Load app UI with usage info
+else idToken cached
+    Main -> FirebaseAuth: verifyIdToken(idToken)
+    alt Token valid
+        Main -> Firestore: Query subscription status (userId)
+        Firestore --> Main: Returns subscription data
+        Main --> Renderer: Load app UI with usage info
+    else Token invalid/expired
+        Main --> Renderer: Show login form
+        Renderer -> User: Re-login required
+    end
+end
+
+' Text Correction with Token Limit Check
+User -> Renderer: Enters text and clicks "Correct"
+Renderer -> Main: correct-text(text)
+Main -> Firestore: Get user data (userId)
+Firestore --> Main: Returns {tokenLimit, tokensUsed}
+alt Tokens available (tokensUsed + consumed < tokenLimit)
+    Main -> AI: Process text correction
+    AI --> Main: Returns corrected text
+    Main -> Firestore: Update tokensUsed (+consumed)
+    Firestore --> Main: Update confirmed
+    Main --> Renderer: Display corrected text
+else Token limit exceeded
+    Main --> Renderer: "Token limit exceeded"
+    Renderer -> User: Shows error message
+end
+
+' Token Revalidation if Subscription Issue Detected
+alt Subscription data missing/inconsistent
+    Main -> FirebaseAuth: verifyIdToken(idToken)
+    alt Token valid
+        Main -> Firestore: Re-fetch subscription data
+        Firestore --> Main: Updated subscription data
+    else Token expired
+        Main --> Renderer: "Session expired, re-login"
+        Renderer -> User: Shows login prompt
+    end
+end
+
+@enduml
