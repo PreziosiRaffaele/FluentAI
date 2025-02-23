@@ -23,13 +23,15 @@ async function createWindow () {
         }
     });
 
-    if (!authService.getCurrentUser()) {
-        await mainWindow.loadFile(path.join(__dirname, 'html', 'login.html'));
-    } else {
+    const isLoggedIn = authService.getCurrentUser();
+
+    if (isLoggedIn) {
         const config = configManager.getConfig();
         aiService.initializeProviders(config.providers);
         macroService.registerMacros(config.macros);
         await mainWindow.loadFile(path.join(__dirname, 'html', 'config.html'));
+    } else {
+        await mainWindow.loadFile(path.join(__dirname, 'html', 'login.html'));
     }
 }
 
@@ -70,5 +72,4 @@ ipcMain.handle('signup', async (event, { email, password }) => {
 
 app.on('will-quit', () => {
     macroService.unregisterAll();
-    authService.logout();
 });
