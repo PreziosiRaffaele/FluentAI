@@ -5,11 +5,10 @@ const MacroService = require('./js/MacroService');
 const AuthService = require('./js/AuthService');
 const path = require('path');
 
-// Initialize services
-const configManager = new ConfigManager(app.getPath('userData'));
+const authService = new AuthService();
 const aiService = new AIService();
 const macroService = new MacroService(aiService);
-const authService = new AuthService();
+const configManager = new ConfigManager(authService);
 
 let mainWindow = null;
 
@@ -23,25 +22,23 @@ async function createWindow () {
         }
     });
 
-    const isLoggedIn = authService.getCurrentUser();
 
-    if (isLoggedIn) {
-        const config = configManager.getConfig();
-        aiService.initializeProviders(config.providers);
-        macroService.registerMacros(config.macros);
-        await mainWindow.loadFile(path.join(__dirname, 'html', 'config.html'));
-    } else {
-        await mainWindow.loadFile(path.join(__dirname, 'html', 'login.html'));
-    }
+
+    await mainWindow.loadFile(path.join(__dirname, 'html', 'login.html'));
+
 }
 
 app.whenReady().then(createWindow);
 
 // IPC handlers
-ipcMain.handle('get-config', () => configManager.getConfig());
+ipcMain.handle('get-config', async () => {
+    const user = authService.getCurrentUser();
+    return await configManager.getConfig(user.uid);
+});
 
 ipcMain.handle('save-config', async (event, newConfig) => {
-    configManager.saveConfig(newConfig);
+    const user = authService.getCurrentUser();
+    await configManager.saveConfig(user.uid, newConfig);
     aiService.initializeProviders(newConfig.providers);
     macroService.registerMacros(newConfig.macros);
 });
@@ -50,7 +47,7 @@ ipcMain.handle('login', async (event, { email, password }) => {
     try {
         const user = await authService.login(email, password);
         if (user) {
-            const config = configManager.getConfig();
+            const config = await configManager.getConfig(user.uid);
             aiService.initializeProviders(config.providers);
             macroService.registerMacros(config.macros);
             await mainWindow.loadFile(path.join(__dirname, 'html', 'config.html'));

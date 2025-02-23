@@ -1,24 +1,52 @@
-const path = require('path');
-const fs = require('fs');
+const { doc, getDoc, setDoc } = require('firebase/firestore');
 
 class ConfigManager {
-    constructor(userDataPath) {
-        this.configPath = path.join(userDataPath, 'config.json');
-        this.initializeConfig();
+    constructor(authService) {
+        this.db = authService.db;
     }
 
-    initializeConfig () {
-        if (!fs.existsSync(this.configPath)) {
-            fs.writeFileSync(this.configPath, JSON.stringify({ providers: [], macros: [] }));
+    async getConfig (userId) {
+        try {
+            const userConfigRef = doc(this.db, 'users', userId);
+            const userConfigSnap = await getDoc(userConfigRef);
+
+            if (!userConfigSnap.exists()) {
+                // Initialize default config
+                const defaultConfig = {
+                    providers: [],
+                    macros: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+
+                await this.saveConfig(userId, defaultConfig);
+                return defaultConfig;
+            }
+
+            return userConfigSnap.data();
+        } catch (error) {
+            console.error('Error fetching config:', error);
+            return null;
         }
     }
 
-    getConfig () {
-        return JSON.parse(fs.readFileSync(this.configPath, "utf8"));
-    }
+    async saveConfig (userId, newConfig) {
+        try {
+            const userConfigRef = doc(this.db, 'users', userId);
 
-    saveConfig (newConfig) {
-        fs.writeFileSync(this.configPath, JSON.stringify(newConfig, null, 2));
+            // Add metadata to the config
+            const configWithMetadata = {
+                ...newConfig,
+                updatedAt: new Date()
+            };
+
+            await setDoc(userConfigRef, configWithMetadata, { merge: true });
+
+            return configWithMetadata;
+        } catch (error) {
+            console.error('Error saving config:', error);
+            throw new Error('Failed to save configuration');
+        }
     }
 }
 
