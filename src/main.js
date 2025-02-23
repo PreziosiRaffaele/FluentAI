@@ -22,10 +22,15 @@ async function createWindow () {
         }
     });
 
-
-
     await mainWindow.loadFile(path.join(__dirname, 'html', 'login.html'));
+}
 
+async function initializeServices (config) {
+    const providers = await configManager.getProviders();
+    console.log('Providers:', providers);
+    aiService.initializeProviders(providers);
+    macroService.registerMacros(config.macros);
+    return providers;
 }
 
 app.whenReady().then(createWindow);
@@ -36,20 +41,25 @@ ipcMain.handle('get-config', async () => {
     return await configManager.getConfig(user.uid);
 });
 
-ipcMain.handle('save-config', async (event, newConfig) => {
-    const user = authService.getCurrentUser();
-    await configManager.saveConfig(user.uid, newConfig);
-    aiService.initializeProviders(newConfig.providers);
-    macroService.registerMacros(newConfig.macros);
+// Add new IPC handler for providers
+ipcMain.handle('get-providers', async () => {
+    return await configManager.getProviders();
 });
 
+// Update the save-agents handler
+ipcMain.handle('save-agents', async (event, newConfig) => {
+    const user = authService.getCurrentUser();
+    await configManager.saveConfig(user.uid, newConfig);
+    await initializeServices(newConfig);
+});
+
+// Update the login handler
 ipcMain.handle('login', async (event, { email, password }) => {
     try {
         const user = await authService.login(email, password);
         if (user) {
             const config = await configManager.getConfig(user.uid);
-            aiService.initializeProviders(config.providers);
-            macroService.registerMacros(config.macros);
+            await initializeServices(config);
             await mainWindow.loadFile(path.join(__dirname, 'html', 'config.html'));
         }
         return { success: true };

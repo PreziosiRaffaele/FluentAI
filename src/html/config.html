@@ -8,32 +8,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body class="container py-4">
-    <!-- Providers Section -->
-    <div class="card mb-5">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Providers</h5>
-            <button class="btn btn-primary btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#providerModal">New Provider</button>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="providersTable">
-                    <!-- Providers will be populated here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
     <!-- Macros Section -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Agents</h5>
-            <button class="btn btn-primary btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#macroModal">New Agent</button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#macroModal">New Agent</button>
         </div>
         <div class="card-body">
             <table class="table">
@@ -48,36 +27,6 @@
                     <!-- Macros will be populated here -->
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Provider Modal -->
-    <div class="modal fade" id="providerModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Provider Configuration</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="providerForm" novalidate>
-                        <div class="mb-3">
-                            <label class="form-label">Provider Name</label>
-                            <select class="form-select" id="providerName" required>
-                                <!-- Providers will be populated dynamically -->
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">API Key</label>
-                            <input type="password" class="form-control" id="apiKey" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="saveProvider()">Save</button>
-                </div>
-            </div>
         </div>
     </div>
 

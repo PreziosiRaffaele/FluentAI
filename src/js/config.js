@@ -44,9 +44,9 @@ const providerModels = [
 
 // State management
 let config = {
-    providers: [],
     macros: []
 };
+let providers = [];
 let editingIndex = -1;
 
 // Modal management
@@ -62,34 +62,6 @@ function initializeModal (modalId, formId) {
         editingIndex = -1;
     });
     return modal;
-}
-
-// Provider management
-/**
- * Save provider data to config
- * @returns {Promise<void>}
- */
-async function saveProvider () {
-    const form = document.getElementById('providerForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-    const provider = {
-        name: document.getElementById('providerName').value,
-        apiKey: document.getElementById('apiKey').value
-    };
-
-    if (editingIndex >= 0) {
-        config.providers[editingIndex] = provider;
-    } else {
-        config.providers.push(provider);
-    }
-
-    await ipcRenderer.invoke('save-config', config);
-    renderTables();
-    resetAndCloseProviderModal();
 }
 
 // Macro management
@@ -128,7 +100,7 @@ async function saveMacro () {
         config.macros.push(macro);
     }
 
-    await ipcRenderer.invoke('save-config', config);
+    await ipcRenderer.invoke('save-agents', config);
     renderTables();
     resetAndCloseMacroModal();
 }
@@ -150,10 +122,6 @@ function updateModelOptions (providerName) {
  * Render all tables and update UI elements
  */
 function renderTables () {
-    // Render providers section
-    renderProvidersTable();
-    updateProviderSelects('providerName');
-
     // Render macros section
     renderMacrosTable();
     updateProviderSelects('macroProvider');
@@ -161,24 +129,6 @@ function renderTables () {
     // Initialize model options
     const providerSelect = document.getElementById('macroProvider');
     updateModelOptions(providerSelect.value);
-}
-
-// Add this new function
-function renderProvidersTable () {
-    const providersTable = document.getElementById('providersTable');
-    providersTable.innerHTML = config.providers.map((provider, index) => `
-        <tr>
-            <td>${provider.name}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="editProvider(${index})" aria-label="Edit" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProvider(${index})" aria-label="Delete" title="Delete">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
 }
 
 function updateProviderSelects (field) {
@@ -209,6 +159,7 @@ function renderMacrosTable () {
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     config = await ipcRenderer.invoke('get-config');
+    providers = await ipcRenderer.invoke('get-providers');
 
     // Initialize event listeners
     document.getElementById('macroProvider').addEventListener('change', (e) => {
@@ -223,19 +174,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Initialize modals
-    initializeModal('providerModal', 'providerForm');
     initializeModal('macroModal', 'macroForm');
 
     // Initial render
     renderTables();
 });
-
-function resetAndCloseProviderModal () {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('providerModal'));
-    document.getElementById('providerForm').reset();
-    editingIndex = -1;
-    modal.hide();
-}
 
 function resetAndCloseMacroModal () {
     const modal = bootstrap.Modal.getInstance(document.getElementById('macroModal'));
@@ -244,28 +187,10 @@ function resetAndCloseMacroModal () {
     modal.hide();
 }
 
-function editProvider (index) {
-    editingIndex = index;
-    const provider = config.providers[index];
-
-    document.getElementById('providerName').value = provider.name;
-    document.getElementById('apiKey').value = provider.apiKey;
-
-    new bootstrap.Modal(document.getElementById('providerModal')).show();
-}
-
-async function deleteProvider (index) {
-    if (confirm('Are you sure you want to delete this provider?')) {
-        config.providers.splice(index, 1);
-        await ipcRenderer.invoke('save-config', config);
-        renderTables();
-    }
-}
-
 function deleteMacro (index) {
     if (confirm('Are you sure you want to delete this macro?')) {
         config.macros.splice(index, 1);
-        ipcRenderer.invoke('save-config', config);
+        ipcRenderer.invoke('save-agents', config);
         renderTables();
     }
 }
@@ -285,5 +210,3 @@ function editMacro (index) {
 
     new bootstrap.Modal(document.getElementById('macroModal')).show();
 }
-
-// Add edit and delete functions as needed

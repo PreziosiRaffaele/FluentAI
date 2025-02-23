@@ -1,8 +1,22 @@
-const { doc, getDoc, setDoc } = require('firebase/firestore');
+const { doc, getDoc, setDoc, collection, getDocs } = require('firebase/firestore');
 
 class ConfigManager {
     constructor(authService) {
         this.db = authService.db;
+    }
+
+    async getProviders () {
+        try {
+            const providersCollection = collection(this.db, 'providers');
+            const providersSnapshot = await getDocs(providersCollection);
+            return providersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Error fetching providers:', error);
+            return [];
+        }
     }
 
     async getConfig (userId) {
@@ -13,7 +27,6 @@ class ConfigManager {
             if (!userConfigSnap.exists()) {
                 // Initialize default config
                 const defaultConfig = {
-                    providers: [],
                     macros: [],
                     createdAt: new Date(),
                     updatedAt: new Date()
