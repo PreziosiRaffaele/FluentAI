@@ -1,21 +1,27 @@
 const { doc, getDoc, setDoc, collection, getDocs } = require('firebase/firestore');
 
 class ConfigManager {
+    _providersCache;
+
     constructor(authService) {
         this.db = authService.db;
     }
 
     async getProviders () {
         try {
+            if (this._providersCache) {
+                return Promise.resolve(this._providersCache);
+            }
+
             const providersCollection = collection(this.db, 'providers');
             const providersSnapshot = await getDocs(providersCollection);
-            return providersSnapshot.docs.map(doc => ({
+            this._providersCache = providersSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            return this._providersCache;
         } catch (error) {
-            console.error('Error fetching providers:', error);
-            return [];
+            throw new Error('Failed to fetch providers');
         }
     }
 

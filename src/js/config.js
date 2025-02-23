@@ -24,24 +24,6 @@ function isValidShortcut (shortcut) {
     return VALID_KEY_PATTERN.test(parts[parts.length - 1]);
 }
 
-// Data models
-const providerModels = [
-    {
-        name: 'Open AI',
-        models: [
-            'gpt-4o-mini',
-            'gpt-4',
-            'gpt-3.5-turbo'
-        ]
-    },
-    {
-        name: 'DeepSeek',
-        models: [
-            'deepseek-chat'
-        ]
-    }
-];
-
 // State management
 let config = {
     macros: []
@@ -112,9 +94,17 @@ async function saveMacro () {
  */
 function updateModelOptions (providerName) {
     const modelSelect = document.getElementById('macroModel');
-    const models = providerModels.find(provider => provider.name === providerName)?.models ?? [];
+    const selectedProvider = providers.find(p => p.name === providerName);
+    const models = selectedProvider?.models || [];
     modelSelect.innerHTML = models.map(model =>
         `<option value="${model}">${model}</option>`
+    ).join('');
+}
+
+function updateProviderSelects (field) {
+    const providerNames = document.getElementById(field);
+    providerNames.innerHTML = providers.map(provider =>
+        `<option value="${provider.name}">${provider.name}</option>`
     ).join('');
 }
 
@@ -129,13 +119,6 @@ function renderTables () {
     // Initialize model options
     const providerSelect = document.getElementById('macroProvider');
     updateModelOptions(providerSelect.value);
-}
-
-function updateProviderSelects (field) {
-    const providerNames = document.getElementById(field);
-    providerNames.innerHTML = providerModels.map(provider =>
-        `<option value="${provider.name}">${provider.name}</option>`
-    ).join('');
 }
 
 function renderMacrosTable () {
@@ -178,6 +161,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial render
     renderTables();
+    if (providers.length > 0) {
+        updateModelOptions(providers[0].name);
+    }
 });
 
 function resetAndCloseMacroModal () {
