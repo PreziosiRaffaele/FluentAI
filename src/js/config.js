@@ -170,8 +170,12 @@ function renderProvidersTable () {
         <tr>
             <td>${provider.name}</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="editProvider(${index})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProvider(${index})">Delete</button>
+                <button class="btn btn-sm btn-primary" onclick="editProvider(${index})" aria-label="Edit" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProvider(${index})" aria-label="Delete" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
             </td>
         </tr>
     `).join('');
@@ -191,8 +195,12 @@ function renderMacrosTable () {
             <td>${macro.name}</td>
             <td>${macro.shortcut}</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="editMacro(${index})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteMacro(${index})">Delete</button>
+                <button class="btn btn-sm btn-primary" onclick="editMacro(${index})" aria-label="Edit" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteMacro(${index})" aria-label="Delete" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
             </td>
         </tr>
     `).join('');
