@@ -45,10 +45,10 @@ ipcMain.handle("get-providers", async () => {
   return await configManager.getProviders();
 });
 
-// Update the save-agents handler
-ipcMain.handle("save-agents", async (event, newConfig) => {
+// Update the save-macros handler
+ipcMain.handle("save-macros", async (event, newConfig) => {
   const user = authService.getCurrentUser();
-  await configManager.saveConfig(user.uid, newConfig);
+  await configManager.saveMacros(user.uid, newConfig.macros);
   await initializeServices(newConfig);
 });
 
